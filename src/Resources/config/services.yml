@@ -1,0 +1,146 @@
+parameters:
+    bundle.ddd_provider.listener.kernel.exception.class: ProjetNormandie\DddProviderBundle\Layer\Infrastructure\EventListener\HandlerException
+    bundle.ddd_provider.listener.kernel.response.profiler.class: ProjetNormandie\DddProviderBundle\Layer\Infrastructure\EventListener\HandlerResponseProfiler
+    bundle.ddd_provider.response.handler.class: ProjetNormandie\DddProviderBundle\Layer\Presentation\Response\Handler\ResponseHandler
+    bundle.ddd_provider.logger.class: ProjetNormandie\DddProviderBundle\Layer\Infrastructure\Logger\Logger
+    bundle.ddd_provider.serializer.strategy.class: ProjetNormandie\DddProviderBundle\Layer\Infrastructure\Serializer\SerializerStrategy
+    bundle.ddd_provider.version_getter.strategy.class: ProjetNormandie\DddProviderBundle\Layer\Presentation\Response\Generalisation\Version\VersionGetterComposite
+    bundle.ddd_provider.version_getter_from_request_variable.strategy.class: ProjetNormandie\DddProviderBundle\Layer\Presentation\Response\Generalisation\Version\VersionGetterFromRequestVariable
+    bundle.ddd_provider.version_getter_from_route_name.strategy.class: ProjetNormandie\DddProviderBundle\Layer\Presentation\Response\Generalisation\Version\VersionGetterFromRouteName
+    bundle.ddd_provider.version_getter_from_route_path.strategy.class: ProjetNormandie\DddProviderBundle\Layer\Presentation\Response\Generalisation\Version\VersionGetterFromRoutePath
+    bundle.ddd_provider.version_getter_from_route_options.strategy.class: ProjetNormandie\DddProviderBundle\Layer\Presentation\Response\Generalisation\Version\VersionGetterFromRouteOptions
+    bundle.ddd_provider.request.strategy.class: ProjetNormandie\DddProviderBundle\Layer\Presentation\Request\Generalisation\Request\SymfonyStrategy
+    bundle.ddd_provider.resolver.strategy.class: ProjetNormandie\DddProviderBundle\Layer\Presentation\Request\Generalisation\Resolver\ResolverStrategy
+    bundle.ddd_provider.validator.strategy.class: ProjetNormandie\DddProviderBundle\Layer\Application\Generalisation\Validation\ValidationHandler\SymfonyValidatorStrategy
+
+services:
+    #
+    # KERNEL EVENT EXCEPTION
+    #
+    bundle.ddd_provider.listener.kernel.exception:
+        class: '%bundle.ddd_provider.listener.kernel.exception.class%'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+
+    #
+    # KERNEL EVENT RESPONSE
+    #
+    bundle.ddd_provider.listener.kernel.response.profiler:
+      class: '%bundle.ddd_provider.listener.kernel.response.profiler.class%'
+      tags:
+        - { name: kernel.event_listener, event: kernel.response, priority: 1 }
+
+    #
+    # response handler
+    #
+    bundle.ddd_provider.response.handler:
+        shared: false
+        class: '%bundle.ddd_provider.response.handler.class%'
+        arguments:
+          - '@bundle.ddd_provider.serializer.strategy'
+          - '@bundle.ddd_provider.request.strategy'
+          - '@bundle.ddd_provider.version_getter.strategy'
+
+    #
+    # request in strategy
+    #
+    bundle.ddd_provider.request.strategy:
+        class: '%bundle.ddd_provider.request.strategy.class%'
+        arguments: ['@request_stack']
+
+    #
+    # jms serializer in strategy
+    #
+    bundle.ddd_provider.serializer.strategy:
+        class: '%bundle.ddd_provider.serializer.strategy.class%'
+        arguments: ['@jms_serializer']
+
+    #
+    # Version getter strategy
+    #
+    bundle.ddd_provider.version_getter.strategy:
+        class: '%bundle.ddd_provider.version_getter.strategy.class%'
+        calls:
+          - [addVersionGetter, ['@bundle.ddd_provider.version_getter_from_request_variable.strategy']]
+          - [addVersionGetter, ['@bundle.ddd_provider.version_getter_from_route_name.strategy']]
+          - [addVersionGetter, ['@bundle.ddd_provider.version_getter_from_route_path.strategy']]
+          - [addVersionGetter, ['@bundle.ddd_provider.version_getter_from_route_options.strategy']]
+
+    #
+    # Version getter from request variable strategy
+    #
+    bundle.ddd_provider.version_getter_from_request_variable.strategy:
+        class: '%bundle.ddd_provider.version_getter_from_request_variable.strategy.class%'
+        arguments:
+          - '@bundle.ddd_provider.request.strategy'
+
+    #
+    # Version getter from route name strategy
+    #
+    bundle.ddd_provider.version_getter_from_route_name.strategy:
+        class: '%bundle.ddd_provider.version_getter_from_route_name.strategy.class%'
+        arguments:
+          - '@bundle.ddd_provider.request.strategy'
+
+    #
+    # Version getter from path strategy
+    #
+    bundle.ddd_provider.version_getter_from_route_path.strategy:
+        class: '%bundle.ddd_provider.version_getter_from_route_path.strategy.class%'
+        arguments:
+          - '@bundle.ddd_provider.request.strategy'
+          - '@router'
+
+    #
+    # Version getter from path options strategy
+    #
+    bundle.ddd_provider.version_getter_from_route_options.strategy:
+        class: '%bundle.ddd_provider.version_getter_from_route_options.strategy.class%'
+        arguments:
+          - '@bundle.ddd_provider.request.strategy'
+          - '@router'
+
+    #
+    # sf2 option resolver
+    #
+    bundle.ddd_provider.symfony.options.resolver:
+        class: Symfony\Component\OptionsResolver\OptionsResolver
+
+    #
+    # option resolver in strategy
+    #
+    bundle.ddd_provider.resolver.strategy:
+        class: '%bundle.ddd_provider.resolver.strategy.class%'
+        arguments:
+            - '@bundle.ddd_provider.symfony.options.resolver'
+
+    #
+    # SERVICE LOGGER for DDD LAYERS
+    #
+    bundle.ddd_provider.logger:
+        class: '%bundle.ddd_provider.logger.class%'
+        arguments: ['@logger']
+
+    bundle.ddd_provider.logger.presentation:
+        class: '%bundle.ddd_provider.logger.class%'
+        arguments: ['@logger']
+        tags:
+            - { name: monolog.logger , channel: presentation }
+
+    bundle.ddd_provider.logger.application:
+        class: '%bundle.ddd_provider.logger.class%'
+        arguments: ['@logger']
+        tags:
+            - { name: monolog.logger , channel: application }
+
+    bundle.ddd_provider.logger.domain:
+        class: '%bundle.ddd_provider.logger.class%'
+        arguments: ['@logger']
+        tags:
+            - { name: monolog.logger , channel: domain }
+
+    bundle.ddd_provider.logger.infrastructure:
+        class: '%bundle.ddd_provider.logger.class%'
+        arguments: ['@logger']
+        tags:
+            - { name: monolog.logger , channel: infrastructure }

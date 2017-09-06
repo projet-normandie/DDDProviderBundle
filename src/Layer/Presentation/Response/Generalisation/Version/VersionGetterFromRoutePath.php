@@ -1,0 +1,73 @@
+<?php
+declare(strict_types = 1);
+
+namespace ProjetNormandie\DddProviderBundle\Layer\Presentation\Response\Generalisation\Version;
+
+use ProjetNormandie\DddProviderBundle\Layer\Presentation\Request\Generalisation\Request\RequestInterface;
+use Symfony\Component\Routing\RouterInterface;
+
+/**
+ * Class VersionGetterFromRoutePath
+ *
+ * @category ProjetNormandie\DddProviderBundle\Layer
+ * @package Presentation
+ * @subpackage Response\Generalisation\Version
+ */
+class VersionGetterFromRoutePath implements VersionGetterInterface
+{
+    /**
+     * @var RequestInterface
+     */
+    protected $request;
+
+    /**
+     * @var RouterInterface
+     */
+    protected $router;
+
+    /**
+     * SerializerStrategy constructor.
+     * @param RequestInterface $request
+     * @param RouterInterface $router
+     */
+    public function __construct(RequestInterface $request, RouterInterface $router)
+    {
+        $this->request = $request;
+        $this->router = $router;
+    }
+
+    /**
+     * Returns the request.
+     *
+     * @return RequestInterface
+     */
+    protected function getRequest(): RequestInterface
+    {
+        return $this->request;
+    }
+
+    /**
+     * Returns the router.
+     *
+     * @return RouterInterface
+     */
+    public function getRouter(): RouterInterface
+    {
+        return $this->router;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getVersion(): ?int
+    {
+        $routeName = $this->getRequest()->get('_route');
+        $route = $this->getRouter()->getRouteCollection()->get($routeName);
+
+        if (null !== $route && \preg_match('`/[vV](?:ers(?:ion)?)?(\d+)/`', $route->getPath(), $matches)) {
+            return (int)$matches[1];
+        }
+
+        return null;
+    }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "projet-normandie/ddd-provider-bundle",
+  "description": "Domain-Driven-Design turnkey solution bundle for simple API structure.",
+  "type": "library",
+  "keywords": ["DDD", "Domain-Driven-Design", "Bundle", "Architecture"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Nicolas Giraud",
+      "email": "nicolas.giraud.dev@gmail.com",
+      "role": "Main Developer"
+    }
+  ],
+  "require": {
+    "php": "^7.1.0",
+    "roave/security-advisories": "dev-master",
+    "doctrine/orm":"^2.5.10",
+    "gedmo/doctrine-extensions": "^2.4.30",
+    "jms/serializer-bundle": "^2.1.0",
+    "monolog/monolog": "^1.23.0",
+    "nicodev/asserts": "^1.1.0",
+    "symfony/symfony": "^3.3.6"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^6.3.0",
+    "phake/phake": "^3.0.0"
+  },
+  "autoload": {
+    "psr-4": { "ProjetNormandie\\DddProviderBundle\\": "src/DddProviderBundle" }
+  },
+  "autoload-dev": {
+    "psr-4": { "ProjetNormandie\\Tests\\DddProviderBundle\\": "src/Tests/DddProviderBundle" }
+  },
+  "prefer-stable": true,
+  "minimum-stability": "dev"
+}
